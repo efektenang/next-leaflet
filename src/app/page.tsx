@@ -83,7 +83,7 @@ export default function Home(): React.JSX.Element {
         clearInterval(intervalId);
       }
     };
-  }, [yourPoint, previousLocation, startPoint, endPoint]);
+  }, [yourPoint, previousLocation]);
 
   const sendLocationToApi = async (location: any) => {
     try {
