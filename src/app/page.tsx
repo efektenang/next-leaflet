@@ -1,103 +1,156 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import useGeolocation from "@/utils/geolocation";
+import { Col, Form, notification, Row, Select } from "antd";
+import dynamic from "next/dynamic";
+import React, { useEffect, useRef, useState } from "react";
+
+const MapsLayout = dynamic(() => import('@/components/layouts/maps.layout'), {
+  ssr: false
+})
+
+const optionLocation = [
+  { value: JSON.stringify([3.546925198718566, 98.6900148315562]), label: 'Concepto' },
+  { value: JSON.stringify([3.61737217656966, 98.68598134596503]), label: 'Rumah' },
+];
+
+export default function Home(): React.JSX.Element {
+  const { position, error } = useGeolocation();
+
+  const [lat, setLat] = useState<number>(0)
+  const [long, setLong] = useState<number>(0)
+
+  useEffect(() => {
+    if (position) {
+      setLat(position?.lat)
+      setLong(position?.lng)
+    }
+  }, [position])
+
+  const [startPoint, setStartPoint] = useState<any>([0, 0])
+  const [yourPoint, setYourPoint] = useState<any>([lat, long])
+  const [previousLocation, setPreviousLocation] = useState([]);
+  const [endPoint, setEndPoint] = useState<any>(undefined)
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    setYourPoint([lat, long])
+  }, [lat, long])
+
+  useEffect(() => {
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setYourPoint([latitude, longitude]);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  useEffect(() => {
+    let intervalId: any;
+    if (yourPoint || startPoint && endPoint) {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        setPreviousLocation(yourPoint);
+        return;
+      }
+
+      intervalId = setInterval(() => {
+        if (
+          !previousLocation ||
+          previousLocation[0] !== yourPoint[0] ||
+          previousLocation[1] !== yourPoint[1]
+        ) {
+          sendLocationToApi(yourPoint);
+          setPreviousLocation(yourPoint);
+        }
+      }, 5000); // 5000 milidetik = 5 detik
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [yourPoint, previousLocation, startPoint, endPoint]);
+
+  const sendLocationToApi = async (location: any) => {
+    try {
+      await fetch('https://socket.mri.id/api/v1/message/message-broadcast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'RIX eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.U2FsdGVkX18yWD8fKx3uQzjEa5wbzKEL6xUF3/gymtM20VLqbkS9xFOqmKeRRgRWHnCXDAUfR3u++efvftGDyjY0NHe+gfiIShZxjrvjB6WRDYCFmMJV38eorXVx2MP3y4q3/5grwWUVlqbvzPP2cIFWtkUpR6ySfk3beiCz1aDzmPCPvtJQHn4MmQcWpGKOSAV2Zh2Arjj+sdJKqPgQVl/jcV90HSqSOueQCewI/tjwTOm7AKj84XwxSITyzv2P.0jlEDUWeDkmitDqN1xPEynfVx3fbeSIj8Mu0OT9crx4'
+        },
+        body: JSON.stringify({
+          "message": {
+            location,
+            startPoint,
+            endPoint
+          },
+          "handshake": "broadcast-mri"
+        }),
+      });
+    } catch (error: any) {
+      notification.error({
+        message: error,
+      })
+    }
+  };
+
+  if (error) return <p>Error: {error}</p>;
+  if (!position) return <p>Getting location...</p>;
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <p>Latitude: {lat}</p>
+      <p>Longitude: {long}</p>
+      <h1 className="p-7">
+        Leaflet Map
+      </h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {/* <SocketClient getValue={(v) => setYourPoint(v)} /> */}
+
+      <Row className="grid grid-cols-3 gap-5 pl-7">
+        <Col>
+          <Form.Item label="From">
+            <Select
+              showSearch
+              placeholder="Select Start Point"
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={optionLocation}
+              onChange={(value: string) => setStartPoint(JSON.parse(value))}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          </Form.Item>
+        </Col>
+        <Col>
+          <Form.Item label="To">
+            <Select
+              showSearch
+              placeholder="Select Destination Point"
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={optionLocation}
+              onChange={(value: string) => setEndPoint(JSON.parse(value))}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+      <MapsLayout startPoint={startPoint} yourPoint={yourPoint} endPoint={endPoint} />
+    </>
   );
 }

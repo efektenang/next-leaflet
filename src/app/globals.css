@@ -1,4 +1,4 @@
-@import "tailwindcss";
+/* @import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -20,7 +20,30 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+} */
+
+@import "tailwindcss";
+
+/* @tailwind base;
+@tailwind components; */
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@400..900&family=Sen:wght@400..800&display=swap');
+
+* {
+  font-family: "Sen", sans-serif;
+  box-sizing: border-box;
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #__next, main {
+  height: 100%;
 }
