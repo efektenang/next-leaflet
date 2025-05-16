@@ -29,7 +29,7 @@ export const RoutingTrack = ({
           styles: [{ color: '#5CB338', weight: 0, display: 'none' }],
         },
         createMarker: () => null,
-      });
+      }).addTo(map);
 
       (routingControl as any).on('routesfound', function (e: any) {
         const routes = e.routes;
