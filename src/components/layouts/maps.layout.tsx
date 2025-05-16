@@ -5,7 +5,7 @@ import * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface IMapsLayout {
   startPoint: Leaflet.LatLngExpression
@@ -69,49 +69,54 @@ const RoutingControl = ({
   getValue: (v: any) => void
 }) => {
   const map = useMap();
+  const prevPosition1Ref = useRef(position1);
 
   useEffect(() => {
     if (!map) return;
 
-    var routingControl = Leaflet.Routing.control({
-      waypoints: [Leaflet.latLng(position1), Leaflet.latLng(position2)],
-      routeWhileDragging: true,
-      showAlternatives: false,
-      show: false,
-      addWaypoints: false,
-      lineOptions: {
-        styles: [{ color: '#5CB338', weight: 6 }],
-      },
-      createMarker: () => null, // We already have our custom markers
-    }).addTo(map);
+    if (prevPosition1Ref.current !== position1) {
+      const routingControl = Leaflet.Routing.control({
+        waypoints: [Leaflet.latLng(position1), Leaflet.latLng(position2)],
+        routeWhileDragging: true,
+        showAlternatives: false,
+        show: false,
+        addWaypoints: false,
+        lineOptions: {
+          styles: [{ color: '#5CB338', weight: 6 }],
+        },
+        createMarker: () => null, // We already have our custom markers
+      }).addTo(map);
 
-    (routingControl as any).on('routesfound', function (e: any) {
-      const routes = e.routes;
-      if (routes.length > 0) {
-        // alert('Found ' + routes.length + ' route(s).');
-        const summary = routes[0].summary;
-        const distance = summary.totalDistance;
-        const time = summary.totalTime;
+      (routingControl as any).on('routesfound', function (e: any) {
+        const routes = e.routes;
+        if (routes.length > 0) {
+          const summary = routes[0].summary;
+          const distance = summary.totalDistance;
+          const time = summary.totalTime;
 
-        getValue({
-          distance: 'Total Distance: ' + distance + ' meters',
-          time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
-        })
+          getValue({
+            distance: 'Total Distance: ' + distance + ' meters',
+            time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
+          });
 
-        console.log('Total Distance: ' + distance + ' meters');
-        console.log('Total Time: ' + Math.round(time / 60) + ' minutes');
-      }
-    });
+          console.log('Total Distance: ' + distance + ' meters');
+          console.log('Total Time: ' + Math.round(time / 60) + ' minutes');
+        }
+      });
 
-    return () => {
-      if (map && routingControl) {
-        map.removeControl(routingControl);
-      }
-    };
+      prevPosition1Ref.current = position1;
+
+      return () => {
+        if (map && routingControl) {
+          map.removeControl(routingControl);
+        }
+      };
+    }
   }, [map, position1, position2]);
 
   return null;
 };
+
 
 
 export default function MapsLayout(props: IMapsLayout): React.JSX.Element {
