@@ -1,21 +1,6 @@
-'use client';
-
-import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import * as Leaflet from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import 'leaflet-routing-machine';
-import { useEffect, useRef, useState } from 'react';
-import { RoutingControl } from '@/utils/routing-control';
-import { RoutingTrack } from '@/utils/route-track';
 
-interface IMapsLayout {
-  startPoint: Leaflet.LatLngExpression
-  yourPoint?: Leaflet.LatLngExpression
-  endPoint?: Leaflet.LatLngExpression
-}
-
-const startMarker = Leaflet.divIcon({
+export const startMarker = Leaflet.divIcon({
   html: `<svg viewBox="-4 0 36 36" xmlns="http://www.w3.org/2000/svg" width="50" height="50">
     <path d="M14,0 C21.732,0 28,5.641 28,12.6 C28,23.963 14,36 14,36 C14,36 0,24.064 0,12.6 C0,5.641 6.268,0 14,0 Z" fill="#5CB338"/>
     <circle cx="14" cy="14" r="7" fill="#ffffff"/>
@@ -24,7 +9,7 @@ const startMarker = Leaflet.divIcon({
   iconAnchor: [25, 50],
   className: '',
 });
-const markerIcon = Leaflet.divIcon({
+export const markerIcon = Leaflet.divIcon({
   html: `<svg viewBox="-4 0 36 36" xmlns="http://www.w3.org/2000/svg" width="50" height="50">
     <path d="M14,0 C21.732,0 28,5.641 28,12.6 C28,23.963 14,36 14,36 C14,36 0,24.064 0,12.6 C0,5.641 6.268,0 14,0 Z" fill="#FF6E6E"/>
     <circle cx="14" cy="14" r="7" fill="#ffffff"/>
@@ -33,7 +18,7 @@ const markerIcon = Leaflet.divIcon({
   iconAnchor: [25, 50],
   className: '',
 });
-const yourPoint = Leaflet.divIcon({
+export const yourPoint = Leaflet.divIcon({
   html: `<svg height="50px" width="50px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.00 512.00" xml:space="preserve" fill="#000000">
     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -46,62 +31,3 @@ const yourPoint = Leaflet.divIcon({
   iconAnchor: [25, 50],
   className: '',
 });
-
-
-const GoogleStreetsLayer = () => {
-  const map = useMap();
-
-  useEffect(() => {
-    Leaflet.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-    }).addTo(map);
-  }, [map]);
-
-  return null;
-};
-
-export default function MapsLayout(props: IMapsLayout): React.JSX.Element {
-  const [time, setTime] = useState<string>('')
-  const [distance, setDistance] = useState<string>('')
-
-  return (
-    <div>
-      <div>
-        <p>{distance}</p>
-        <p>{time}</p>
-      </div>
-      <MapContainer
-        center={props.yourPoint}
-        zoom={16}
-        scrollWheelZoom={true}
-        style={{ height: '100vh', width: '100%' }}
-      >
-        <GoogleStreetsLayer />
-
-        <Marker position={props.startPoint} icon={startMarker}>
-          <Popup>Start Location</Popup>
-        </Marker>
-
-        {
-          props?.yourPoint &&
-          <Marker position={props.yourPoint} icon={yourPoint}>
-            <Popup>Start Location</Popup>
-          </Marker>
-        }
-
-        {props?.endPoint &&
-          <Marker position={props.endPoint} icon={markerIcon}>
-            <Popup>End Location</Popup>
-          </Marker>
-        }
-
-        <RoutingTrack position1={props?.yourPoint} position2={props?.endPoint} getValue={(v) => {
-          setDistance(v?.distance)
-          setTime(v?.time)
-        }} />
-        <RoutingControl position1={props.startPoint} position2={props.endPoint} />
-      </MapContainer>
-    </div>
-  );
-}
