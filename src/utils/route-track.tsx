@@ -25,7 +25,9 @@ export const RoutingTrack = ({
         showAlternatives: false,
         show: false,
         addWaypoints: false,
-        lineOptions: false,
+        lineOptions: {
+          styles: [{ color: '#5CB338', weight: 0, display: 'none' }],
+        },
         createMarker: () => null,
       });
 
@@ -41,7 +43,7 @@ export const RoutingTrack = ({
             time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
           });
         }
-      }).addTo(map);
+      });
 
       prevPosition1Ref.current = position1;
 
