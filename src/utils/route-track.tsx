@@ -22,6 +22,11 @@ export const RoutingTrack = ({
       const routingControl = Leaflet.Routing.control({
         waypoints: [Leaflet.latLng(position1), Leaflet.latLng(position2)],
         routeWhileDragging: true,
+        showAlternatives: false,
+        show: false,
+        addWaypoints: false,
+        lineOptions: false,
+        createMarker: () => null,
       });
 
       (routingControl as any).on('routesfound', function (e: any) {
@@ -32,7 +37,7 @@ export const RoutingTrack = ({
           const time = summary.totalTime;
 
           getValue({
-            distance: 'Total Distances: ' + distance + ' meters',
+            distance: 'Total Distance: ' + distance + ' meters',
             time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
           });
         }
