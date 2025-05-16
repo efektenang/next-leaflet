@@ -32,7 +32,7 @@ export const RoutingTrack = ({
           const time = summary.totalTime;
 
           getValue({
-            distance: 'Total Distance: ' + distance + ' meters',
+            distance: 'Total Distances: ' + distance + ' meters',
             time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
           });
         }
