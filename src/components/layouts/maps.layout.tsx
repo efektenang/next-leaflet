@@ -5,7 +5,7 @@ import * as Leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import 'leaflet-routing-machine';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface IMapsLayout {
   startPoint: Leaflet.LatLngExpression
@@ -62,9 +62,11 @@ const GoogleStreetsLayer = () => {
 const RoutingControl = ({
   position1,
   position2,
+  getValue
 }: {
   position1: any;
   position2: any;
+  getValue: (v: any) => void
 }) => {
   const map = useMap();
 
@@ -90,6 +92,11 @@ const RoutingControl = ({
         const distance = summary.totalDistance;
         const time = summary.totalTime;
 
+        getValue({
+          distance: 'Total Distance: ' + distance + ' meters',
+          time: 'Total Time: ' + Math.round(time / 60) + ' minutes'
+        })
+
         console.log('Total Distance: ' + distance + ' meters');
         console.log('Total Time: ' + Math.round(time / 60) + ' minutes');
       }
@@ -107,33 +114,45 @@ const RoutingControl = ({
 
 
 export default function MapsLayout(props: IMapsLayout): React.JSX.Element {
+  const [time, setTime] = useState<string>('')
+  const [distance, setDistance] = useState<string>('')
+
   return (
-    <MapContainer
-      center={props.yourPoint}
-      zoom={16}
-      scrollWheelZoom={true}
-      style={{ height: '100vh', width: '100%' }}
-    >
-      <GoogleStreetsLayer />
+    <div>
+      <div>
+        <p>{distance}</p>
+        <p>{time}</p>
+      </div>
+      <MapContainer
+        center={props.yourPoint}
+        zoom={16}
+        scrollWheelZoom={true}
+        style={{ height: '100vh', width: '100%' }}
+      >
+        <GoogleStreetsLayer />
 
-      <Marker position={props.startPoint} icon={startMarker}>
-        <Popup>Start Location</Popup>
-      </Marker>
-
-      {
-        props?.yourPoint &&
-        <Marker position={props.yourPoint} icon={yourPoint}>
+        <Marker position={props.startPoint} icon={startMarker}>
           <Popup>Start Location</Popup>
         </Marker>
-      }
 
-      {props?.endPoint &&
-        <Marker position={props.endPoint} icon={markerIcon}>
-          <Popup>End Location</Popup>
-        </Marker>
-      }
+        {
+          props?.yourPoint &&
+          <Marker position={props.yourPoint} icon={yourPoint}>
+            <Popup>Start Location</Popup>
+          </Marker>
+        }
 
-      <RoutingControl position1={props.yourPoint} position2={props.endPoint} />
-    </MapContainer>
+        {props?.endPoint &&
+          <Marker position={props.endPoint} icon={markerIcon}>
+            <Popup>End Location</Popup>
+          </Marker>
+        }
+
+        <RoutingControl position1={props.yourPoint} position2={props.endPoint} getValue={(v) => {
+          setDistance(v?.distance)
+          setTime(v?.time)
+        }} />
+      </MapContainer>
+    </div>
   );
 }
