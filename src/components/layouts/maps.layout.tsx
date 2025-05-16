@@ -71,9 +71,9 @@ const RoutingControl = ({
   useEffect(() => {
     if (!map) return;
 
-    const routingControl = Leaflet.Routing.control({
+    var routingControl = Leaflet.Routing.control({
       waypoints: [Leaflet.latLng(position1), Leaflet.latLng(position2)],
-      routeWhileDragging: false,
+      routeWhileDragging: true,
       showAlternatives: false,
       addWaypoints: false,
       lineOptions: {
@@ -81,6 +81,19 @@ const RoutingControl = ({
       },
       createMarker: () => null, // We already have our custom markers
     }).addTo(map);
+
+    (routingControl as any).on('routesfound', function (e: any) {
+      const routes = e.routes;
+      if (routes.length > 0) {
+        // alert('Found ' + routes.length + ' route(s).');
+        const summary = routes[0].summary;
+        const distance = summary.totalDistance;
+        const time = summary.totalTime;
+
+        console.log('Total Distance: ' + distance + ' meters');
+        console.log('Total Time: ' + Math.round(time / 60) + ' minutes');
+      }
+    });
 
     return () => {
       if (map && routingControl) {
@@ -120,7 +133,7 @@ export default function MapsLayout(props: IMapsLayout): React.JSX.Element {
         </Marker>
       }
 
-      <RoutingControl position1={props.startPoint} position2={props.endPoint} />
+      <RoutingControl position1={props.yourPoint} position2={props.endPoint} />
     </MapContainer>
   );
 }
