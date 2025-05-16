@@ -77,6 +77,7 @@ const RoutingControl = ({
       waypoints: [Leaflet.latLng(position1), Leaflet.latLng(position2)],
       routeWhileDragging: true,
       showAlternatives: false,
+      show: false,
       addWaypoints: false,
       lineOptions: {
         styles: [{ color: '#5CB338', weight: 6 }],
